@@ -180,7 +180,6 @@ def businesses_cards(responses, category):
             score = tag.text[tag.text.find(SCORE_PREFIX):tag.text.rfind(REVIEWS_DELIM)]
             score = score.replace(SCORE_PREFIX, "")
             logger.debug(f"scraped {b_name}|{category.name}|{score}|{url}")
-            #print("scraped ", b_name, "|", category.name, "|", score, "|", url)
             try:
                 score = float(score)
             except ValueError:
@@ -264,7 +263,7 @@ def get_businesses_from_categories(categories):
         f.write("]")
 
 
-def main():
+def categories_scraper():
     start_time = time.time()
     logger.info("Starting...")
     url = f"{CFG['Site']['Domain']}{CFG['Site']['Categories_Page']}"
@@ -280,7 +279,3 @@ def main():
     end_time = time.time()
     logger.info(f"Running Time: for scraping category:{CFG['Site']['Category']}, pages:{CFG['Site']['Pages']} "
                 f"took: {end_time - start_time} seconds")
-
-
-if __name__ == '__main__':
-    main()
