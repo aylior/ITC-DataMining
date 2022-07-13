@@ -5,12 +5,13 @@
     "Category": "All",
     "Filters": "?numberofreviews=0&status=all&timeperiod=0&page=1",
     "Pages": 20,
-    "DEFAULT_NUM_PAGES": 200
+    "DEFAULT_NUM_PAGES": 20,
+    "Min_Reviews_Num": 210
   },
   "Log": {
     "Log_File": "trustpilot.log",
     "File_Log_Level": "INFO",
-    "Console_Log_Level": "DEBUG",
+    "Console_Log_Level": "INFO",
     "Log_Format": "%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
   },
   "Parser": {
@@ -20,6 +21,6 @@
     "File": "data.json"
   },
   "Requests": {
-    "Batch_Size": 10
+    "Batch_Size": 20
   }
 }

@@ -168,6 +168,15 @@ def businesses_cards(responses, category):
             url = CFG['Site']['Domain'] + tag[TAG_URL_ATTR]
             b_category = category.name
             b_name = tag.text[:tag.text.find(SCORE_PREFIX)]
+            reviews = tag.text[tag.text.rfind(REVIEWS_DELIM) + 1:]
+            try:
+                reviews = int(reviews.replace(REVIEWS_PREFIX, "").replace(",", ""))
+            except ValueError:
+                logger.warning(f"Business {b_name} has no score (might be 0.0). skipping...")
+                continue
+
+            if reviews < CFG['Site']['Min_Reviews_Num']:
+                continue
             score = tag.text[tag.text.find(SCORE_PREFIX):tag.text.rfind(REVIEWS_DELIM)]
             score = score.replace(SCORE_PREFIX, "")
             logger.debug(f"scraped {b_name}|{category.name}|{score}|{url}")
@@ -177,8 +186,7 @@ def businesses_cards(responses, category):
             except ValueError:
                 logger.warning(f"Business {b_name} has no score (might be 0.0). skipping...")
                 continue
-            reviews = tag.text[tag.text.rfind(REVIEWS_DELIM) + 1:]
-            reviews = int(reviews.replace(REVIEWS_PREFIX, "").replace(",", ""))
+
             category_businesses.append(Business(url, score, b_name, b_category, reviews))
     return category_businesses
 
