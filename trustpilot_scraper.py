@@ -4,6 +4,7 @@ import grequests
 import requests
 import json
 from bs4 import BeautifulSoup
+import scraper_reviews as sr
 
 CONFIG = 'config.json'
 ALL_PAGES = 'All'
@@ -263,7 +264,7 @@ def get_businesses_from_categories(categories):
         f.write("]")
 
 
-def categories_scraper():
+def main():
     start_time = time.time()
     logger.info("Starting...")
     url = f"{CFG['Site']['Domain']}{CFG['Site']['Categories_Page']}"
@@ -279,3 +280,9 @@ def categories_scraper():
     end_time = time.time()
     logger.info(f"Running Time: for scraping category:{CFG['Site']['Category']}, pages:{CFG['Site']['Pages']} "
                 f"took: {end_time - start_time} seconds")
+
+    sr.read_from_json()
+
+
+if __name__ == "__main__":
+    main()

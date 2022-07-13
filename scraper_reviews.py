@@ -1,7 +1,8 @@
-import CONFIG
 import requests
 from bs4 import BeautifulSoup
 import json
+
+
 
 
 # TODO: Limit the results by page or value. #Improve
@@ -146,7 +147,8 @@ def export_to_json(dictionary, file_name):
 
 
 def read_from_json():
-    with open('data-bckup.json', 'r') as f:
+
+    with open('data.json', 'r') as f:
         data = json.load(f)
 
         lg = len(data)
@@ -164,20 +166,21 @@ def read_from_json():
             page_nb = get_nb_page_review(soup)
 
             """ get all pages in list """
-            all_pages = get_list_of_pages(website, page_nb=CONFIG.LIMIT)
+            all_pages = get_list_of_pages(website, page_nb)
 
             """ get all reviews """
             reviews = get_all_reviews(all_pages)
 
             """ export dictionary to json file """
-            json_file = export_to_json(reviews, CONFIG.FILE_NAME)
+            json_file = export_to_json(reviews, 'reviews.json')
 
             print('EXPORTED :', reviews)
 
 
 def main():
+
     read_from_json()
 
 
 if __name__ == "__main__":
-    print(main())
+    main()
