@@ -1,4 +1,6 @@
+import argparse
 import logging
+import sys
 import time
 import grequests
 import requests
@@ -17,7 +19,7 @@ CATEGORY_CONTAINER_CLASS = "styles_headingLink__3ESdh"
 PAGINATION_ATTR = "data-pagination-button-last-link"
 BUSINESS_CARD_ATTR = "data-business-unit-card-link"
 SCORE_PREFIX = "TrustScore "
-
+CONFIG_ARG = "--conf"
 
 class Category:
     def __init__(self, name, url):
@@ -263,8 +265,32 @@ def get_businesses_from_categories(categories):
     with open(CFG['Json']['File'], 'a') as f:
         f.write("]")
 
+def read_cli():
+    parser = argparse.ArgumentParser(description='Command Calculator.')
+    parser.add_argument("-c", type=str)
+    parser.add_argument("-p", type=int)
+    parser.add_argument("-lf", type=str)
+    parser.add_argument("-lc", type=str)
+    args = parser.parse_args()
+    if args.c:
+        CFG['Site']['Category'] = args.c
+    if args.p:
+        CFG['Site']['Pages'] = args.p
+    if args.lf:
+        CFG['Log']["File_Log_Level"] = args.lf
+    if args.lc:
+        CFG['Log']["Console_Log_Level"] = args.lc
+
+
+
+
+    # res = commands[args.command](args.first_number, args.second_number)
+    # if res is not None:
+    #     print(res)
+
 
 def main():
+    read_cli()
     start_time = time.time()
     logger.info("Starting...")
     url = f"{CFG['Site']['Domain']}{CFG['Site']['Categories_Page']}"
