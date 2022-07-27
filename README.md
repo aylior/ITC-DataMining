@@ -1,7 +1,7 @@
 # [TrustPilot.com](https://www.trustpilot.com) Scraper
 ## ITC - Data Science course 2022 - Data Mining project
 
-[Github](https://git@github.com:aylior/ITC-DataMining.git)
+[Github](https://github.com/aylior/ITC-DataMining.git)
 
 ### milestone - 1: Scraping
 The purpose of this milestone is to write a scraper for [TrustPilot.com](https://www.trustpilot.com) website.
