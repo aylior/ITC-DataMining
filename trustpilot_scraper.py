@@ -1,14 +1,16 @@
 import argparse
 import logging
-import sys
 import time
 import grequests
 import requests
 import json
 from bs4 import BeautifulSoup
+import pymysql
+import cryptography
 import scraper_reviews as sr
 
 CONFIG = 'config.json'
+CONFIG_PASS = 'config_pass.json'
 ALL_PAGES = 'All'
 ALL_CATEGORIES = 'All'
 CATEGORY_URL_ATTR = "href"
@@ -20,6 +22,7 @@ PAGINATION_ATTR = "data-pagination-button-last-link"
 BUSINESS_CARD_ATTR = "data-business-unit-card-link"
 SCORE_PREFIX = "TrustScore "
 CONFIG_ARG = "--conf"
+
 
 class Category:
     def __init__(self, name, url):
@@ -55,7 +58,14 @@ def load_configuration():
         return json.load(f)
 
 
+def load_pass_config():
+    """ load the json password configuration file"""
+    with open(CONFIG_PASS) as f:
+        return json.load(f)
+
+
 CFG = load_configuration()
+CFG["DB"]["Password"] = load_pass_config()["DB"]["Password"]
 
 
 def get_logger():
@@ -265,12 +275,16 @@ def get_businesses_from_categories(categories):
     with open(CFG['Json']['File'], 'a') as f:
         f.write("]")
 
+
 def read_cli():
-    parser = argparse.ArgumentParser(description='Command Calculator.')
-    parser.add_argument("-c", type=str)
-    parser.add_argument("-p", type=int)
-    parser.add_argument("-lf", type=str)
-    parser.add_argument("-lc", type=str)
+    parser = argparse.ArgumentParser(description='TrustPilot Scraper.')
+    parser.add_argument("-c", type=str, help="Category name to parse or 'All'")
+    parser.add_argument("-p", type=int, help="Number of category pages to scrape.")
+    parser.add_argument("-lf", type=str, help="Log level for log file (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
+    parser.add_argument("-lc", type=str, help="Log level for log to consile (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
+    parser.add_argument("-usr", type=str, help="DB user name.")
+    parser.add_argument("-pwd", type=str, help="DB user password.")
+    parser.add_argument("-hst", type=str, help="DB host. default: localhost")
     args = parser.parse_args()
     if args.c:
         CFG['Site']['Category'] = args.c
@@ -280,19 +294,33 @@ def read_cli():
         CFG['Log']["File_Log_Level"] = args.lf
     if args.lc:
         CFG['Log']["Console_Log_Level"] = args.lc
+    if args.usr:
+        CFG['DB']['User'] = args.usr
+    if args.pwd:
+        CFG['DB']['Password'] = args.pwd
+    if args.hst:
+        CFG['DB']['Host'] = args.hst
 
 
-
-
-    # res = commands[args.command](args.first_number, args.second_number)
-    # if res is not None:
-    #     print(res)
+def connect_db(query):
+    connection = pymysql.connect(host=CFG["DB"]["Host"],
+                                 user=CFG["DB"]["User"],
+                                 password=CFG["DB"]["Password"])
+    with connection:
+        with connection.cursor() as cursor:
+            if not query.startswith("CREATE DATABASE"):
+                cursor.execute(f'USE {CFG["DB"]["DB_Name"]}')
+            cursor.execute(query)
+            fetched = cursor.fetchall()
+    logger.info(f"Returned from db with result {fetched}")
+    return fetched
 
 
 def main():
-    read_cli()
     start_time = time.time()
     logger.info("Starting...")
+    # Read arguments from cli if any
+    read_cli()
     url = f"{CFG['Site']['Domain']}{CFG['Site']['Categories_Page']}"
     try:
         response = requests.get(url)

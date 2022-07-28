@@ -22,5 +22,10 @@
   },
   "Requests": {
     "Batch_Size": 20
+  },
+  "DB": {
+    "Host": "localhost",
+    "User": "root",
+    "DB_Name": "trust_pilot"
   }
 }
