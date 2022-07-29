@@ -6,11 +6,10 @@ import requests
 import json
 from bs4 import BeautifulSoup
 import pymysql
-import cryptography
 import scraper_reviews as sr
 
 CONFIG = 'config.json'
-CONFIG_PASS = 'config_pass.json'
+SQL_ARCH = "fill_db.sql"
 ALL_PAGES = 'All'
 ALL_CATEGORIES = 'All'
 CATEGORY_URL_ATTR = "href"
@@ -25,8 +24,9 @@ CONFIG_ARG = "--conf"
 
 
 class Category:
-    def __init__(self, name, url):
+    def __init__(self, cat_id, name, url):
         """ A Class holding category name and url as scraped from website"""
+        self.id = cat_id
         self.name = name
         self.url = url
 
@@ -58,16 +58,6 @@ def load_configuration():
         return json.load(f)
 
 
-def load_pass_config():
-    """ load the json password configuration file"""
-    with open(CONFIG_PASS) as f:
-        return json.load(f)
-
-
-CFG = load_configuration()
-CFG["DB"]["Password"] = load_pass_config()["DB"]["Password"]
-
-
 def get_logger():
     """
     Set a logger and return it after set up. The logger will log to a file and to the stdout.
@@ -93,7 +83,83 @@ def get_logger():
     return log
 
 
+CFG = load_configuration()
+
+
+def read_cli():
+    """ CLI for different arguments that override the arguments in the config file."""
+    parser = argparse.ArgumentParser(description='TrustPilot Scraper')
+    parser.add_argument("-c", type=str, help="Category name to parse or 'All'")
+    parser.add_argument("-p", type=int, help="Number of category pages to scrape or 'All.")
+    parser.add_argument("-lf", type=str, help="Log level for log file (DEBUG, INFO, WARNING, ERROR, CRITICAL)."
+                                              "default: INFO")
+    parser.add_argument("-lc", type=str, help="Log level for log to console (DEBUG, INFO, WARNING, ERROR, CRITICAL). "
+                                              "default: INFO")
+    parser.add_argument("-user", type=str, help="DB user name. default: root.")
+    parser.add_argument("-pwd", type=str, help="DB user password. No Default!.")
+    parser.add_argument("-hst", type=str, help="DB host. default: localhost")
+    parser.add_argument("-cd", type=str, choices={"Y", "N"},
+                        help="Drop DB and create again before start scraping (Y/N). default: 'N'")
+
+    args = parser.parse_args()
+    if args.c:
+        CFG['Site']['Category'] = args.c
+    if args.p:
+        CFG['Site']['Pages'] = args.p
+    if args.lf:
+        CFG['Log']["File_Log_Level"] = args.lf
+    if args.lc:
+        CFG['Log']["Console_Log_Level"] = args.lc
+    if args.user:
+        CFG['DB']['User'] = args.user
+    if args.pwd:
+        CFG['DB']['Password'] = args.pwd
+    if args.hst:
+        CFG['DB']['Host'] = args.hst
+    if args.cd:
+        CFG['DB']['Create_db'] = args.cd
+
+
+# Read arguments from CLI
+read_cli()
+
 logger = get_logger()
+
+
+# connect to DB
+def connect_db():
+    """
+    Create connection to DB. Loading connection parameters from config.
+    :return: conn, cursor
+    """
+    try:
+        conn = pymysql.connect(host=CFG["DB"]["Host"],
+                               user=CFG["DB"]["User"],
+                               password=CFG["DB"]["Password"])
+        return conn, conn.cursor()
+    except pymysql.err.OperationalError:
+        logger.critical(f"Can not connect to {CFG['DB']['DB_Name']}. user or password may be incorrect.")
+        exit()
+
+
+connection, cursor = connect_db()
+
+
+def drop_db_with_create():
+    """ Drop the DB and create again according to CLI argument. default value is 'N' in config file."""
+    if CFG['DB']['Create_db'] == "Y":
+        create_db = True
+    else:
+        create_db = False
+    if create_db:
+        with open(CFG['DB']['Create_db_file']) as f:
+            queries = "".join(f.readlines())
+            queries = queries.split(";")
+            for query in queries:
+                query = query.replace('\n', "")
+                if len(query) > 0:
+                    query = query + ';'
+                    exec_query(query)
 
 
 def extract_categories(response):
@@ -116,15 +182,13 @@ def extract_categories(response):
         category_url = a[CATEGORY_URL_ATTR]
         category_name = a.h2.text
         url = CFG['Site']['Domain'] + category_url + CFG['Site']['Filters']
-        categories_lst.append(Category(category_name, url))
+        categories_lst.append(Category(index, category_name, url))
     return categories_lst
 
 
-def dump_open_category(category):
-    """ write to the data file the partial dictionary holding the category details and the businesses belong to it """
-    with open(CFG['Json']['File'], 'a') as f:
-        f.write('{\n' + f'"{category.name}": ' + '\n\t{"url":' + f'"{category.url[:category.url.rfind("&")]}",\n'
-                + '\t"businesses":')
+def db_cat_insert(category):
+    query = f'INSERT INTO Category (name, url) VALUES ("{category.name}", "{category.url}");'
+    exec_query(query)
 
 
 def dump_close_category():
@@ -216,10 +280,20 @@ def get_businesses_cards_from_url(category_pages_urls, category):
     return businesses_cards_lst
 
 
-def scrape_and_dump_pages(num_of_pages, category, initial_response):
+def db_businesses_insert(category, business_lst):
+    """ Insert the businesses of the category to the DB """
+    if len(business_lst) == 0:
+        return
+    for business in business_lst:
+        business.name = business.name.replace('"', "'")
+        query = f'INSERT INTO Business (category_id, name, url, score, reviews) VALUES ({category.id}, ' \
+                f'"{business.name}", "{business.url}", {business.score}, {business.reviews});'
+        exec_query(query)
+
+
+def scrape_and_insert_pages(num_of_pages, category, initial_response):
     """
-    scrape pages of businesses in the category async and write them to the data file when done and close
-    the category element in the data file as well.
+    scrape pages of businesses in the category async and insert them to DB when done.
     :param num_of_pages: number of pages to scrape. defined in the configuration file.
                          if 'All' - the nuber is taken from the first page pagination
     :param category: the category its pages we currently scrape. used for building the Business object
@@ -242,12 +316,11 @@ def scrape_and_dump_pages(num_of_pages, category, initial_response):
             category_businesses += get_businesses_cards_from_url(category_pages_urls, category)
             category_pages_urls = []
             logger.info(f"Scraped {page_num} pages from {category.name}")
-    dump_to_file(category_businesses)
-    dump_close_category()
+    db_businesses_insert(category, category_businesses)
 
 
 def get_businesses_from_categories(categories):
-    """ get the businesses cards for each category pages as defined in configuration, and write to the data file."""
+    """ get the businesses cards for each category pages as defined in configuration, and insert to the DB."""
     logger.info("Getting businesses from categories")
     # writing the opening tag for the json data file
     with open(CFG['Json']['File'], 'w') as f:
@@ -262,65 +335,49 @@ def get_businesses_from_categories(categories):
             num_of_pages = get_num_of_pages(response, category)
         else:
             num_of_pages = CFG['Site']['Pages']
-        # write the beginning of the category to the data file
-        dump_open_category(category)
-        # scrape category pages and dup businesses cards to data file
-        scrape_and_dump_pages(num_of_pages, category, response)
+        # write the category to DB
+        db_cat_insert(category)
+        # Use the id of the category as assigned by DB
+        query = f'SELECT category_id FROM Category WHERE name = "{category.name}";'
+        category_id = exec_query(query)[0][0]
+        category.id = category_id
+        # scrape category pages
+        scrape_and_insert_pages(num_of_pages, category, response)
         logger.info(f"Request for {category.name}: Finished successfully.")
         i += 1
-        if i < len(categories):
-            with open(CFG['Json']['File'], 'a') as f:
-                f.write(",\n")
-    # close the data in the json data file
-    with open(CFG['Json']['File'], 'a') as f:
-        f.write("]")
 
 
-def read_cli():
-    parser = argparse.ArgumentParser(description='TrustPilot Scraper.')
-    parser.add_argument("-c", type=str, help="Category name to parse or 'All'")
-    parser.add_argument("-p", type=int, help="Number of category pages to scrape.")
-    parser.add_argument("-lf", type=str, help="Log level for log file (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
-    parser.add_argument("-lc", type=str, help="Log level for log to consile (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
-    parser.add_argument("-usr", type=str, help="DB user name.")
-    parser.add_argument("-pwd", type=str, help="DB user password.")
-    parser.add_argument("-hst", type=str, help="DB host. default: localhost")
-    args = parser.parse_args()
-    if args.c:
-        CFG['Site']['Category'] = args.c
-    if args.p:
-        CFG['Site']['Pages'] = args.p
-    if args.lf:
-        CFG['Log']["File_Log_Level"] = args.lf
-    if args.lc:
-        CFG['Log']["Console_Log_Level"] = args.lc
-    if args.usr:
-        CFG['DB']['User'] = args.usr
-    if args.pwd:
-        CFG['DB']['Password'] = args.pwd
-    if args.hst:
-        CFG['DB']['Host'] = args.hst
+def keep_sql(query):
+    """ Keep queries except of SELECT to sql file for reconstruct DB if needed. """
+    if not query.lower().startswith("select"):
+        query = query + '\n'
+        if not query.startswith("DROP DATABASE"):
+            with open(SQL_ARCH, 'ab') as f:
+                f.write(query.encode('utf8'))
+        else:
+            with open(SQL_ARCH, 'wb') as f:
+                f.write(query.encode('utf8'))
 
 
-def connect_db(query):
-    connection = pymysql.connect(host=CFG["DB"]["Host"],
-                                 user=CFG["DB"]["User"],
-                                 password=CFG["DB"]["Password"])
-    with connection:
-        with connection.cursor() as cursor:
-            if not query.startswith("CREATE DATABASE"):
-                cursor.execute(f'USE {CFG["DB"]["DB_Name"]}')
-            cursor.execute(query)
-            fetched = cursor.fetchall()
-    logger.info(f"Returned from db with result {fetched}")
+def exec_query(query):
+    """ Execute single query. Return results if any."""
+    keep_sql(query)
+    if not query.lower().startswith("drop database") and not query.lower().startswith("create database") and \
+            not query.lower().startswith("use"):
+        cursor.execute(f'USE {CFG["DB"]["DB_Name"]};')
+    cursor.execute(query)
+    if not query.lower().startswith("select"):
+        connection.commit()
+    fetched = cursor.fetchall()
     return fetched
 
 
 def main():
     start_time = time.time()
     logger.info("Starting...")
-    # Read arguments from cli if any
-    read_cli()
+    # Drop DB and create again according to config and CLI argument if exists.
+    drop_db_with_create()
+    # Website categories main page.
     url = f"{CFG['Site']['Domain']}{CFG['Site']['Categories_Page']}"
     try:
         response = requests.get(url)
@@ -329,13 +386,14 @@ def main():
         return
     # get the categories list from the categories page of the website.
     categories_links = extract_categories(response)
-    # scrape businesses from the categories in the list and write them to the data file
+    # scrape businesses from the categories in the list and write them to the DB.
     get_businesses_from_categories(categories_links)
     end_time = time.time()
     logger.info(f"Running Time: for scraping category:{CFG['Site']['Category']}, pages:{CFG['Site']['Pages']} "
                 f"took: {end_time - start_time} seconds")
 
-    sr.read_from_json()
+    # sr.read_from_json()
+    connection.close()
 
 
 if __name__ == "__main__":

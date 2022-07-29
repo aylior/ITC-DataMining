@@ -26,6 +26,9 @@
   "DB": {
     "Host": "localhost",
     "User": "root",
-    "DB_Name": "trust_pilot"
+    "Password": "",
+    "DB_Name": "trust_pilot",
+    "Create_db_file": "create_db.sql",
+    "Create_db": "N"
   }
 }

@@ -5,16 +5,17 @@ USE trust_pilot;
 CREATE TABLE Category (
     category_id int NOT NULL AUTO_INCREMENT,
     name VARCHAR(45), 
-    url VARCHAR(255),
+    url VARCHAR(2000),
     PRIMARY KEY (category_id)
 );
 
 CREATE TABLE Business (
     business_id int NOT NULL AUTO_INCREMENT,
     category_id int NOT NULL,
-    name VARCHAR(45), 
-    score int,
-    url VARCHAR(255),
+    name VARCHAR(255),
+    score float,
+    reviews int,
+    url VARCHAR(2000),
     PRIMARY KEY (business_id),
     FOREIGN KEY (category_id) REFERENCES Category(category_id)
 );
@@ -30,8 +31,8 @@ CREATE TABLE Review (
     review_id int NOT NULL AUTO_INCREMENT,
     business_id int NOT NULL,
     user_id int, 
-    score int,
-    url VARCHAR(255),
+    score float,
+    url VARCHAR(2000),
     timestamp timestamp,
     PRIMARY KEY (review_id),
     FOREIGN KEY (business_id) REFERENCES Business(business_id),
