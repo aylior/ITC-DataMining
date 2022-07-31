@@ -2,4 +2,3 @@ grequests~=0.6.0
 requests~=2.28.1
 beautifulsoup4~=4.11.1
 PyMySQL~=1.0.2
-cryptography~=37.0.4
