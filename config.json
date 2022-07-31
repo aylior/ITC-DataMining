@@ -4,9 +4,9 @@
     "Categories_Page": "/categories/",
     "Category": "All",
     "Filters": "?numberofreviews=0&status=all&timeperiod=0&page=1",
-    "Pages": 20,
-    "DEFAULT_NUM_PAGES": 20,
-    "Min_Reviews_Num": 210
+    "Pages": 50,
+    "DEFAULT_NUM_PAGES": 50,
+    "Min_Reviews_Num": 100
   },
   "Log": {
     "Log_File": "trustpilot.log",
@@ -22,5 +22,11 @@
   },
   "Requests": {
     "Batch_Size": 20
+  },
+  "DB": {
+    "Host": "localhost",
+    "User": "root",
+    "DB_Name": "trust_pilot"
   }
 }
+
