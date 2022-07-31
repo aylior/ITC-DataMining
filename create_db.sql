@@ -33,7 +33,7 @@ CREATE TABLE Review (
     user_id int, 
     score float,
     url VARCHAR(2000),
-    timestamp timestamp,
+    review_date timestamp,
     PRIMARY KEY (review_id),
     FOREIGN KEY (business_id) REFERENCES Business(business_id),
     FOREIGN KEY (user_id) REFERENCES User_details(user_id)

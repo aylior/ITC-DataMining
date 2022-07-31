@@ -1,0 +1,84 @@
+[
+  {
+    "Animals & Pets": {
+      "url": "https://www.trustpilot.com/categories/animals_pets?numberofreviews=0&status=all&timeperiod=0",
+      "businesses": {
+        "HealthySmiles Pet Dental": {
+          "name": "HealthySmiles Pet Dental",
+          "url": "https://www.trustpilot.com/review/healthysmiles.pet",
+          "score": 5.0,
+          "review": 906
+        }
+      }
+    }
+  },
+  {
+    "Business Services": {
+      "url": "https://www.trustpilot.com/categories/business_services?numberofreviews=0&status=all&timeperiod=0",
+      "businesses": {
+        "National Business Capital": {
+          "name": "National Business Capital",
+          "url": "https://www.trustpilot.com/review/nationalbusinesscapital.com",
+          "score": 5.0,
+          "review": 1680
+        },
+        "Big Think Capital": {
+          "name": "Big Think Capital",
+          "url": "https://www.trustpilot.com/review/bigthinkcapital.com",
+          "score": 5.0,
+          "review": 1612
+        }
+      }
+    }
+  },
+  {
+    "Education & Training": {
+      "url": "https://www.trustpilot.com/categories/education_training?numberofreviews=0&status=all&timeperiod=0",
+      "businesses": {
+        "IAP Career College": {
+          "name": "IAP Career College",
+          "url": "https://www.trustpilot.com/review/www.iapcollege.com",
+          "score": 5.0,
+          "review": 628
+        }
+      }
+    }
+  },
+  {
+    "Electronics & Technology": {
+      "url": "https://www.trustpilot.com/categories/electronics_technology?numberofreviews=0&status=all&timeperiod=0",
+      "businesses": {
+        "Bloom Audio": {
+          "name": "Bloom Audio",
+          "url": "https://www.trustpilot.com/review/bloomaudio.com",
+          "score": 5.0,
+          "review": 1061
+        },
+        "Bodor Laser": {
+          "name": "Bodor Laser",
+          "url": "https://www.trustpilot.com/review/bodor.com",
+          "score": 5.0,
+          "review": 954
+        },
+        "Timepieceperfection": {
+          "name": "Timepieceperfection",
+          "url": "https://www.trustpilot.com/review/timepieceperfection.com",
+          "score": 5.0,
+          "review": 876
+        },
+        "Krostyshop": {
+          "name": "Krostyshop",
+          "url": "https://www.trustpilot.com/review/krostyshop.com",
+          "score": 5.0,
+          "review": 765
+        },
+        "Getcashforlaptop": {
+          "name": "Getcashforlaptop",
+          "url": "https://www.trustpilot.com/review/getcashforlaptop.com",
+          "score": 5.0,
+          "review": 689
+        }
+      }
+    }
+  }
+]

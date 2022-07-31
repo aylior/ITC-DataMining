@@ -392,8 +392,9 @@ def main():
     logger.info(f"Running Time: for scraping category:{CFG['Site']['Category']}, pages:{CFG['Site']['Pages']} "
                 f"took: {end_time - start_time} seconds")
 
-    # sr.read_from_json()
-    connection.close()
+    sr.main(CFG, logger)
+
+    cursor.close()
 
 
 if __name__ == "__main__":
