@@ -57,50 +57,72 @@ The purpose of this milestone is to write a scraper for [TrustPilot.com](https:/
 * Log: Batch_Size - Number of async calls. Currently set to 20
 
 
-### Installation
+### <b>Installation</b>
 pip install -r requirements.txt
 
-### Entry Point
-python trustpilot_scraper.py -pwd [DB pwd]
+### <b>Entry Point</b>
+python trustpilot_scraper.py -pwd [DB pwd] -cd Y [for first run]
 
-### Requierments
-#### Modules
+### <b>Requierments</b>
+#### <b>Modules</b>
 * grequests~=0.6.0
 * requests~=2.28.1
 * beautifulsoup4~=4.11.1
 * PyMySQL~=1.0.2
-### Files
+#### <b>Files</b>
 * config.json - on the main directory
 * trustpilot.log - will be created by the scraper in the main directory.
 
-### milestone - 2: Database
-All data is inserted to database according to the ERD instead of dumped to json.
+## <b>milestone - 2: Database</b>
+All data is inserted to <b>Database</b> according to the ERD instead of dumped to json.
+Added <b>CLI</b> feature. 
 
-#### Added configuration
-* DB: Host - host name of the DB. Defaul: localhost
-* DB: User - DB user. Default: root
-* DB: Password - need to provide through CLI
-* DB: Create_db_file - sql file name to create the DB and tables on main directory.
-* DB: Create_db - drop db and create again. Default: 'N'
 
-#### Added files
-* create_db.sql - on the main directory. build the DB and tables.
+### <b>CLI</b>
+<b>-h</b>: help<br>
+<b>-c</b> :   Category name to parse or 'All'<br>
+<b>-p</b> :   Number of category pages to scrape or 'All'<br>
+<b>-lf</b> :  Log level for log file (DEBUG, INFO, WARNING, ERROR, CRITICAL).default: INFO<br>
+<b>-lc</b>  : Log level for log to console (DEBUG, INFO, WARNING, ERROR, CRITICAL). default: INFO<br>
+<b>-user</b>: DB user name. default: root.<br>
+<b>-pwd</b>: DB user password. No Default!.<br>
+<b>-hst</b>:  DB host. default: localhost<br>
+<b>-cd</b> :  Drop DB and create again before start scraping (Y/N). default: 'N'<br>
 
-#### CLI
--c :   Category name to parse or 'All'")<br>
--p :   Number of category pages to scrape or 'All'<br>
--lf :  Log level for log file (DEBUG, INFO, WARNING, ERROR, CRITICAL).default: INFO<br>
--lc  : Log level for log to console (DEBUG, INFO, WARNING, ERROR, CRITICAL). default: INFO<br>
--user: DB user name. default: root.<br>
--pwd: DB user password. No Default!.<br>
--hst:  DB host. default: localhost<br>
--cd :  Drop DB and create again before start scraping (Y/N). default: 'N'<br>
+### <b>Added configuration</b>
+* <b>DB: Host</b> - host name of the DB. Defaul: localhost
+* <b>DB: User</b> - DB user. Default: root
+* <b>DB: Password</b> - need to provide through CLI
+* <b>DB: Create_db_file</b> - sql file name to create the DB and tables on main directory.
+* <b>DB: Create_db</b> - drop db and create again. Default: 'N'
 
-#### DB
+
+### <b>Entry Point</b>
+python trustpilot_scraper.py -pwd [DB pwd] -cd Y [for first run]
+
+### <b>Requierments</b>
+#### <b>Modules</b>
+* grequests~=0.6.0
+* requests~=2.28.1
+* beautifulsoup4~=4.11.1
+* PyMySQL~=1.0.2
+### <b>Added files</b>
+* <b>scraper_reviews.py</b> - scrapes review and user details from each review.
+* <b>db_creation.py</b> - maneging all the connctions to the review and user tables in the DB.
+* <b>create_db.sql</b> - on the main directory. build the DB and tables.
+
+### <b>DB</b><br>
 ERD<br>
 <img src="img/ERD.png"><br>
 Category Table<br>
 <img src="img/category_tbl.png"><br>
 Business Table<br>
-<img src="img/business_tbl.png">
+<img src="img/business_tbl.png"><br>
+Review Table<br>
+<img src="img/review_tbl.png"><br>
+Review_text table<br>
+<img src="img/review_text_tbl.png"><br>
+User_details table<br>
+<img src="img/user_details_tbl.png"><br>
+
 

@@ -43,7 +43,7 @@ CREATE TABLE Review (
 CREATE TABLE Review_text (
     review_id int NOT NULL AUTO_INCREMENT,
     title VARCHAR(255),
-    text VARCHAR(500),
+    text VARCHAR(2000),
     primary KEY (review_id),
     FOREIGN KEY (review_id) REFERENCES Review(review_id)
 );
