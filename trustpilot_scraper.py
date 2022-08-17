@@ -177,33 +177,7 @@ def scrape_pages(num_of_pages, category, initial_response):
 
 
 
-# def get_businesses_from_categories(categories):
-#     """ get the businesses cards for each category pages as defined in configuration, and insert to the DB."""
-#     logger.info("Getting businesses from categories")
-#     # writing the opening tag for the json data file
-#     with open(CFG['Json']['File'], 'w') as f:
-#         f.write("[")
-#     i = 0
-#     while i < len(categories):
-#         category = categories[i]
-#         logger.info(f"Start scraping {category.name} at {category.url}")
-#         # get the number of pages from the first page by parsing pagination
-#         response = requests.get(category.url)
-#         if CFG['Site']['Pages'] == ALL_PAGES:
-#             num_of_pages = get_num_of_pages(response, category)
-#         else:
-#             num_of_pages = CFG['Site']['Pages']
-#         # write the category to DB
-#         tp_db.db_cat_insert(category)
-#         # Use the id of the category as assigned by DB
-#         query = f'SELECT category_id FROM Category WHERE name = "{category.name}";'
-#         category_id = tp_db.exec_query(query)[0][0]
-#         category.id = category_id
-#         # scrape category pages
-#         category_businesses = scrape_pages(num_of_pages, category, response)
-#         tp_db.db_businesses_insert(category, category_businesses)
-#         logger.info(f"Request for {category.name}: Finished successfully.")
-#         i += 1
+
 def scrape_category(category):
     """ get the businesses cards for each category pages as defined in configuration, and insert to the DB."""
     logger.info("Getting businesses from categories")
@@ -218,7 +192,7 @@ def scrape_category(category):
     return num_of_pages, response
 
 def insert_category_to_db(category):
-    # write the category to DB
+    """write the category to DB"""
     tp_db.db_cat_insert(category)
     # Use the id of the category as assigned by DB
     query = f'SELECT category_id FROM Category WHERE name = "{category.name}";'
