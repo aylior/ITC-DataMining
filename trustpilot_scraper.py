@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 import scraper_reviews as sr
 
-import tp_config    
+import tp_config
 import tp_db
 import tp_logger
 
@@ -176,8 +176,6 @@ def scrape_pages(num_of_pages, category, initial_response):
     return category_businesses
 
 
-
-
 def scrape_category(category):
     """ get the businesses cards for each category pages as defined in configuration, and insert to the DB."""
     logger.info("Getting businesses from categories")
@@ -190,6 +188,7 @@ def scrape_category(category):
         num_of_pages = CFG['Site']['Pages']
 
     return num_of_pages, response
+
 
 def insert_category_to_db(category):
     """write the category to DB"""
@@ -229,7 +228,7 @@ def main():
     logger.info(f"Running Time: for scraping category:{CFG['Site']['Category']}, pages:{CFG['Site']['Pages']} "
                 f"took: {end_time - start_time} seconds")
 
-    sr.main(CFG, logger)
+    sr.main()
 
     tp_db.cursor.close()
 

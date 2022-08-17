@@ -6,7 +6,9 @@
     "Filters": "?numberofreviews=0&status=all&timeperiod=0&page=1",
     "Pages": 20,
     "DEFAULT_NUM_PAGES": 20,
-    "Min_Reviews_Num": 210
+    "Business_Count": 40,
+    "Min_Reviews_Num": 210,
+    "Business_API": ""
   },
   "Log": {
     "Log_File": "trustpilot.log",

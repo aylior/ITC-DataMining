@@ -28,6 +28,7 @@ def read_cli():
     parser.add_argument("-user", type=str, default="root", help="DB user name. default: root.")
     parser.add_argument("-pwd", type=str, help="DB user password. No Default!.")
     parser.add_argument("-hst", type=str, default="localhost", help="DB host. default: localhost")
+    parser.add_argument("-api", type=str, default="", help="Business name to apply sentiment analysis API on reviews ")
     parser.add_argument("-cd", default="N", type=str, choices={"Y", "N"},
                         help="Drop DB and create again before start scraping (Y/N). default: 'N'")
 
@@ -49,6 +50,8 @@ def read_cli():
         CFG['DB']['Password'] = args.pwd
     if args.hst:
         CFG['DB']['Host'] = args.hst
+    if args.api:
+        CFG['Site']['Business_API'] = args.api
     if args.cd:
         CFG['DB']['Create_db'] = args.cd
 

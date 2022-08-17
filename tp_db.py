@@ -56,8 +56,7 @@ def db_businesses_insert(category, business_lst):
     for business in business_lst:
         business.name = business.name.replace('"', "'")
         query = f'INSERT INTO Business (category_id, name, url, score, reviews) VALUES ({category.id}, ' \
-                f'"{business.name}", "{business.url}", {business.score}, {business.reviews}) \
-                ON DUPLICATE KEY UPDATE score={business.score}, reviews={business.reviews};'
+                f'"{business.name}", "{business.url}", {business.score}, {business.reviews});'
         exec_query(query)
 
 

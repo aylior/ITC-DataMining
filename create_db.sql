@@ -4,7 +4,7 @@ USE trust_pilot;
 
 CREATE TABLE Category (
     category_id int NOT NULL AUTO_INCREMENT,
-    name VARCHAR(45), 
+    name VARCHAR(45),
     url VARCHAR(2000),
     PRIMARY KEY (category_id)
 );
@@ -29,8 +29,8 @@ CREATE TABLE User_details (
 
 CREATE TABLE Review (
     review_id int NOT NULL AUTO_INCREMENT,
-    business_id int NOT NULL,
-    user_id int, 
+    business_id int,
+    user_id int,
     score float,
     url VARCHAR(2000),
     review_date timestamp,
@@ -48,4 +48,8 @@ CREATE TABLE Review_text (
     FOREIGN KEY (review_id) REFERENCES Review(review_id)
 );
 
-
+CREATE TABLE Review_sentiment (Review_id int NOT NULL AUTO_INCREMENT,
+                               positive VARCHAR(255),
+                               neutral VARCHAR(2000),
+                               negative VARCHAR(2000),
+                               primary KEY (review_id));
