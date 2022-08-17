@@ -184,8 +184,8 @@ Please add the following arguments to the command line:
 
 ### <b>Entry Point</b>
 
-- python3 trustpilot_scraper.py -pwd [DB pwd] -b [Business name] -p 1 -cd Y -c "[Category]
-- python3 trustpilot_scraper.py -pwd [DB pwd] -b "Pet Rebellion" -p 1 -cd Y -c "Animals & Pets"
+- python3 trustpilot_scraper.py -pwd [DB pwd] -b [Business name] -p 1 -cd Y -c "[Category] -api [Business name]
+- python3 trustpilot_scraper.py -pwd [DB pwd] -b "Pet Rebellion" -p 1 -cd Y -c "Animals & Pets" -api "Pet Rebellion"
 
 
 
