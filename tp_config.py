@@ -17,6 +17,7 @@ def read_cli():
     """ CLI for different arguments that override the arguments in the config file."""
     parser = argparse.ArgumentParser(description='TrustPilot Scraper')
     parser.add_argument("-c", type=str, default="All", help="Category name to parse or 'All'")
+    parser.add_argument("-b", type=str, default="All", help="Business name to parse or 'All'")
     parser.add_argument("-p", type=int, default=2, help="Number of category pages to scrape or 'All.")
     parser.add_argument("-lf", type=str, default="INFO",
                         help="Log level for log file (DEBUG, INFO, WARNING, ERROR, CRITICAL)."
@@ -34,6 +35,8 @@ def read_cli():
     args = parser.parse_args()
     if args.c:
         CFG['Site']['Category'] = args.c
+    if args.b:
+        CFG['Site']['Business'] = args.b
     if args.p:
         CFG['Site']['Pages'] = args.p
     if args.lf:
