@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 import scraper_reviews as sr
 
-import tp_config
+import tp_config    
 import tp_db
 import tp_logger
 
