@@ -16,7 +16,7 @@ CREATE TABLE Business (
     score float,
     reviews int,
     url VARCHAR(2000),
-    PRIMARY KEY (business_id),
+    PRIMARY KEY (business_id, name),
     FOREIGN KEY (category_id) REFERENCES Category(category_id)
 );
 

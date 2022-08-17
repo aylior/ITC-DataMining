@@ -1,15 +1,13 @@
-import argparse
-import logging
 import time
 import grequests
 import requests
-import json
 from bs4 import BeautifulSoup
-import pymysql
 import scraper_reviews as sr
 
-CONFIG = 'config.json'
-SQL_ARCH = "fill_db.sql"
+import tp_config
+import tp_db
+import tp_logger
+
 ALL_PAGES = 'All'
 ALL_CATEGORIES = 'All'
 CATEGORY_URL_ATTR = "href"
@@ -52,114 +50,9 @@ class Business:
         return f"Name: {self.name} | category: {self.category} | score: {self.score} | url: {self.url}"
 
 
-def load_configuration():
-    """ load the json configuration file"""
-    with open(CONFIG) as f:
-        return json.load(f)
+CFG = tp_config.CFG
 
-
-def get_logger():
-    """
-    Set a logger and return it after set up. The logger will log to a file and to the stdout.
-    :return: logger: the logging object for logging to log file and console.
-    """
-    # create log
-    log = logging.getLogger()
-    log.setLevel(logging.DEBUG)
-    # create file handler and set level according to configuration. Writing mode is 'w' instead of 'a'
-    # so there is no need to delete log file each run.
-    fh = logging.FileHandler(CFG["Log"]["Log_File"], mode="w")
-    ch = logging.StreamHandler()
-    fh.setLevel(CFG["Log"]["File_Log_Level"])
-    ch.setLevel(CFG["Log"]["Console_Log_Level"])
-    # create formatter
-    formatter = logging.Formatter(CFG["Log"]["Log_Format"])
-    # add formatter to the handlers handler
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    # add handlers to log
-    log.addHandler(ch)
-    log.addHandler(fh)
-    return log
-
-
-CFG = load_configuration()
-
-
-def read_cli():
-    """ CLI for different arguments that override the arguments in the config file."""
-    parser = argparse.ArgumentParser(description='TrustPilot Scraper')
-    parser.add_argument("-c", type=str, help="Category name to parse or 'All'")
-    parser.add_argument("-p", type=int, help="Number of category pages to scrape or 'All.")
-    parser.add_argument("-lf", type=str, help="Log level for log file (DEBUG, INFO, WARNING, ERROR, CRITICAL)."
-                                              "default: INFO")
-    parser.add_argument("-lc", type=str, help="Log level for log to console (DEBUG, INFO, WARNING, ERROR, CRITICAL). "
-                                              "default: INFO")
-    parser.add_argument("-user", type=str, help="DB user name. default: root.")
-    parser.add_argument("-pwd", type=str, help="DB user password. No Default!.")
-    parser.add_argument("-hst", type=str, help="DB host. default: localhost")
-    parser.add_argument("-cd", type=str, choices={"Y", "N"},
-                        help="Drop DB and create again before start scraping (Y/N). default: 'N'")
-
-    args = parser.parse_args()
-    if args.c:
-        CFG['Site']['Category'] = args.c
-    if args.p:
-        CFG['Site']['Pages'] = args.p
-    if args.lf:
-        CFG['Log']["File_Log_Level"] = args.lf
-    if args.lc:
-        CFG['Log']["Console_Log_Level"] = args.lc
-    if args.user:
-        CFG['DB']['User'] = args.user
-    if args.pwd:
-        CFG['DB']['Password'] = args.pwd
-    if args.hst:
-        CFG['DB']['Host'] = args.hst
-    if args.cd:
-        CFG['DB']['Create_db'] = args.cd
-
-
-# Read arguments from CLI
-read_cli()
-
-logger = get_logger()
-
-
-# connect to DB
-def connect_db():
-    """
-    Create connection to DB. Loading connection parameters from config.
-    :return: conn, cursor
-    """
-    try:
-        conn = pymysql.connect(host=CFG["DB"]["Host"],
-                               user=CFG["DB"]["User"],
-                               password=CFG["DB"]["Password"])
-        return conn, conn.cursor()
-    except pymysql.err.OperationalError:
-        logger.critical(f"Can not connect to {CFG['DB']['DB_Name']}. user or password may be incorrect.")
-        exit()
-
-
-connection, cursor = connect_db()
-
-
-def drop_db_with_create():
-    """ Drop the DB and create again according to CLI argument. default value is 'N' in config file."""
-    if CFG['DB']['Create_db'] == "Y":
-        create_db = True
-    else:
-        create_db = False
-    if create_db:
-        with open(CFG['DB']['Create_db_file']) as f:
-            queries = "".join(f.readlines())
-            queries = queries.split(";")
-            for query in queries:
-                query = query.replace('\n', "")
-                if len(query) > 0:
-                    query = query + ';'
-                    exec_query(query)
+logger = tp_logger.get_logger()
 
 
 def extract_categories(response):
@@ -184,32 +77,6 @@ def extract_categories(response):
         url = CFG['Site']['Domain'] + category_url + CFG['Site']['Filters']
         categories_lst.append(Category(index, category_name, url))
     return categories_lst
-
-
-def db_cat_insert(category):
-    query = f'INSERT INTO Category (name, url) VALUES ("{category.name}", "{category.url}");'
-    exec_query(query)
-
-
-def dump_close_category():
-    """ write to the data file the json closing of the category """
-    with open(CFG['Json']['File'], 'a') as f:
-        f.write('}}')
-
-
-def dump_to_file(business_lst):
-    """ write to the data file the businesses of the category as dictionary"""
-    business_dict = dict()
-    if len(business_lst) == 0:
-        dump_close_category()
-        return
-    for business in business_lst:
-        business_dict.update({business.name: {"name": business.name,
-                                              "url": business.url,
-                                              "score": business.score,
-                                              "review": business.reviews}})
-    with open(CFG['Json']['File'], 'a') as f:
-        json.dump(business_dict, f, indent=8)
 
 
 def get_num_of_pages(response, category):
@@ -280,24 +147,14 @@ def get_businesses_cards_from_url(category_pages_urls, category):
     return businesses_cards_lst
 
 
-def db_businesses_insert(category, business_lst):
-    """ Insert the businesses of the category to the DB """
-    if len(business_lst) == 0:
-        return
-    for business in business_lst:
-        business.name = business.name.replace('"', "'")
-        query = f'INSERT INTO Business (category_id, name, url, score, reviews) VALUES ({category.id}, ' \
-                f'"{business.name}", "{business.url}", {business.score}, {business.reviews});'
-        exec_query(query)
-
-
-def scrape_and_insert_pages(num_of_pages, category, initial_response):
+def scrape_pages(num_of_pages, category, initial_response):
     """
     scrape pages of businesses in the category async and insert them to DB when done.
     :param num_of_pages: number of pages to scrape. defined in the configuration file.
                          if 'All' - the nuber is taken from the first page pagination
     :param category: the category its pages we currently scrape. used for building the Business object
     :param initial_response: used for determine the number of pages from the category fist page
+    :return category business from scraping
     """
     # hold the business cards from the category pages
     category_businesses = []
@@ -316,67 +173,65 @@ def scrape_and_insert_pages(num_of_pages, category, initial_response):
             category_businesses += get_businesses_cards_from_url(category_pages_urls, category)
             category_pages_urls = []
             logger.info(f"Scraped {page_num} pages from {category.name}")
-    db_businesses_insert(category, category_businesses)
+    return category_businesses
 
 
-def get_businesses_from_categories(categories):
+
+# def get_businesses_from_categories(categories):
+#     """ get the businesses cards for each category pages as defined in configuration, and insert to the DB."""
+#     logger.info("Getting businesses from categories")
+#     # writing the opening tag for the json data file
+#     with open(CFG['Json']['File'], 'w') as f:
+#         f.write("[")
+#     i = 0
+#     while i < len(categories):
+#         category = categories[i]
+#         logger.info(f"Start scraping {category.name} at {category.url}")
+#         # get the number of pages from the first page by parsing pagination
+#         response = requests.get(category.url)
+#         if CFG['Site']['Pages'] == ALL_PAGES:
+#             num_of_pages = get_num_of_pages(response, category)
+#         else:
+#             num_of_pages = CFG['Site']['Pages']
+#         # write the category to DB
+#         tp_db.db_cat_insert(category)
+#         # Use the id of the category as assigned by DB
+#         query = f'SELECT category_id FROM Category WHERE name = "{category.name}";'
+#         category_id = tp_db.exec_query(query)[0][0]
+#         category.id = category_id
+#         # scrape category pages
+#         category_businesses = scrape_pages(num_of_pages, category, response)
+#         tp_db.db_businesses_insert(category, category_businesses)
+#         logger.info(f"Request for {category.name}: Finished successfully.")
+#         i += 1
+def scrape_category(category):
     """ get the businesses cards for each category pages as defined in configuration, and insert to the DB."""
     logger.info("Getting businesses from categories")
-    # writing the opening tag for the json data file
-    with open(CFG['Json']['File'], 'w') as f:
-        f.write("[")
-    i = 0
-    while i < len(categories):
-        category = categories[i]
-        logger.info(f"Start scraping {category.name} at {category.url}")
-        # get the number of pages from the first page by parsing pagination
-        response = requests.get(category.url)
-        if CFG['Site']['Pages'] == ALL_PAGES:
-            num_of_pages = get_num_of_pages(response, category)
-        else:
-            num_of_pages = CFG['Site']['Pages']
-        # write the category to DB
-        db_cat_insert(category)
-        # Use the id of the category as assigned by DB
-        query = f'SELECT category_id FROM Category WHERE name = "{category.name}";'
-        category_id = exec_query(query)[0][0]
-        category.id = category_id
-        # scrape category pages
-        scrape_and_insert_pages(num_of_pages, category, response)
-        logger.info(f"Request for {category.name}: Finished successfully.")
-        i += 1
+    logger.info(f"Start scraping {category.name} at {category.url}")
+    # get the number of pages from the first page by parsing pagination
+    response = requests.get(category.url)
+    if CFG['Site']['Pages'] == ALL_PAGES:
+        num_of_pages = get_num_of_pages(response, category)
+    else:
+        num_of_pages = CFG['Site']['Pages']
 
+    return num_of_pages, response
 
-def keep_sql(query):
-    """ Keep queries except of SELECT to sql file for reconstruct DB if needed. """
-    if not query.lower().startswith("select"):
-        query = query + '\n'
-        if not query.startswith("DROP DATABASE"):
-            with open(SQL_ARCH, 'ab') as f:
-                f.write(query.encode('utf8'))
-        else:
-            with open(SQL_ARCH, 'wb') as f:
-                f.write(query.encode('utf8'))
-
-
-def exec_query(query):
-    """ Execute single query. Return results if any."""
-    keep_sql(query)
-    if not query.lower().startswith("drop database") and not query.lower().startswith("create database") and \
-            not query.lower().startswith("use"):
-        cursor.execute(f'USE {CFG["DB"]["DB_Name"]};')
-    cursor.execute(query)
-    if not query.lower().startswith("select"):
-        connection.commit()
-    fetched = cursor.fetchall()
-    return fetched
+def insert_category_to_db(category):
+    # write the category to DB
+    tp_db.db_cat_insert(category)
+    # Use the id of the category as assigned by DB
+    query = f'SELECT category_id FROM Category WHERE name = "{category.name}";'
+    category_id = tp_db.exec_query(query)[0][0]
+    category.id = category_id
+    return category
 
 
 def main():
     start_time = time.time()
     logger.info("Starting...")
     # Drop DB and create again according to config and CLI argument if exists.
-    drop_db_with_create()
+    tp_db.drop_db_with_create()
     # Website categories main page.
     url = f"{CFG['Site']['Domain']}{CFG['Site']['Categories_Page']}"
     try:
@@ -387,14 +242,22 @@ def main():
     # get the categories list from the categories page of the website.
     categories_links = extract_categories(response)
     # scrape businesses from the categories in the list and write them to the DB.
-    get_businesses_from_categories(categories_links)
+    i = 0
+    while i < len(categories_links):
+        num_of_pages, response = scrape_category(categories_links[i])
+        category = insert_category_to_db(categories_links[i])
+        category_businesses = scrape_pages(num_of_pages, category, response)
+        tp_db.db_businesses_insert(category, category_businesses)
+        logger.info(f"Request for {category.name}: Finished successfully.")
+
+        i += 1
     end_time = time.time()
     logger.info(f"Running Time: for scraping category:{CFG['Site']['Category']}, pages:{CFG['Site']['Pages']} "
                 f"took: {end_time - start_time} seconds")
 
     sr.main(CFG, logger)
 
-    cursor.close()
+    tp_db.cursor.close()
 
 
 if __name__ == "__main__":
