@@ -178,7 +178,6 @@ def scrape_pages(num_of_pages, category, initial_response):
 
 def scrape_category(category):
     """ get the businesses cards for each category pages as defined in configuration, and insert to the DB."""
-    logger.info("Getting businesses from categories")
     logger.info(f"Start scraping {category.name} at {category.url}")
     # get the number of pages from the first page by parsing pagination
     response = requests.get(category.url)
@@ -222,13 +221,12 @@ def main():
         category_businesses = scrape_pages(num_of_pages, category, response)
         tp_db.db_businesses_insert(category, category_businesses)
         logger.info(f"Request for {category.name}: Finished successfully.")
-
         i += 1
     end_time = time.time()
     logger.info(f"Running Time: for scraping category:{CFG['Site']['Category']}, pages:{CFG['Site']['Pages']} "
                 f"took: {end_time - start_time} seconds")
 
-    sr.main()
+    sr.review_scraper_manager()
 
     tp_db.cursor.close()
 

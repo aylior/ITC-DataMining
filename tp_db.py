@@ -14,9 +14,6 @@ def connect_db():
     Create connection to DB. Loading connection parameters from config.
     :return: conn, cursor
     """
-    print(CFG["DB"]["User"])
-    print(CFG["DB"]["Host"])
-    print(CFG["DB"]["Password"])
     try:
         conn = pymysql.connect(host=CFG["DB"]["Host"],
                                user=CFG["DB"]["User"],
@@ -48,7 +45,13 @@ def drop_db_with_create():
 
 
 def db_cat_insert(category):
-    query = f'INSERT INTO Category (name, url) VALUES ("{category.name}", "{category.url}");'
+    query_select = f'SELECT category_id FROM Category WHERE name = "{category.name}";'
+    res = exec_query(query_select)
+
+    if len(res) > 0:
+        query = f'UPDATE Category SET name = "{category.name}", url = "{category.url}" WHERE name = "{category.name}";'
+    else:
+        query = f'INSERT INTO Category (name, url) VALUES ("{category.name}", "{category.url}");'
     exec_query(query)
 
 
@@ -58,8 +61,17 @@ def db_businesses_insert(category, business_lst):
         return
     for business in business_lst:
         business.name = business.name.replace('"', "'")
-        query = f'INSERT INTO Business (category_id, name, url, score, reviews) VALUES ({category.id}, ' \
+        query_select = f'SELECT business_id from Business WHERE name = "{business.name}";'
+        res = exec_query(query_select)
+        query = ""
+        if len(res) > 0:
+            query = f'UPDATE Business SET category_id = {category.id}, name = "{business.name}", ' \
+                    f'url = "{business.url}", score = {business.score}, ' \
+                    f'reviews = {business.reviews} WHERE name = "{business.name}";'
+        else:
+            query = f'INSERT INTO Business (category_id, name, url, score, reviews) VALUES ({category.id}, ' \
                 f'"{business.name}", "{business.url}", {business.score}, {business.reviews});'
+
         exec_query(query)
 
 

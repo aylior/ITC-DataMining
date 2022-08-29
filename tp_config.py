@@ -29,7 +29,7 @@ def read_cli():
     parser.add_argument("-pwd", type=str, help="DB user password. No Default!.")
     parser.add_argument("-hst", type=str, help="DB host")
     parser.add_argument("-api", type=str, default="", help="Business name to apply sentiment analysis API on reviews ")
-    parser.add_argument("-cd", default="N", type=str, choices={"Y", "N"},
+    parser.add_argument("-cd", type=str, choices={"Y", "N"},
                         help="Drop DB and create again before start scraping (Y/N). default: 'N'")
 
     # update config parameter with CLI arguments

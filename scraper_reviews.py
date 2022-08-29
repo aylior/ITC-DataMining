@@ -15,10 +15,7 @@ CFG = tp_config.CFG
 logger = tp_logger.get_logger()
 
 """ DATABASE LOGIN ----------> (REPLACE WITH ClI DATA) """
-# HOST = "localhost"
-# USER = "root"
-# PASSWORD = 'rootroot'
-# DB_NAME = "trust_pilot"
+
 
 HOST = CFG['DB']['Host']
 USER = CFG['DB']['User']
@@ -125,7 +122,7 @@ def database_creation():
             except IOError:
                 print("Command skipped: ")
 
-    cursor.execute(f'USE trust_pilot;')
+    cursor.execute(f'USE {CFG["DB"]["DB_Name"]};')
 
 
 def get_reviews_data(list_page, business_id):
@@ -148,7 +145,7 @@ def get_reviews_data(list_page, business_id):
                     'class': 'typography_typography__QgicV typography_weight-inherit__iX6Fc typography_fontstyle-inherit__ly_HV'}).text
             except AttributeError:
                 user_country = 'None'
-                logger.warning(f"Can not find country. setting number to default.")
+                logger.debug(f"Can not find country. setting number to default.")
 
             """ Let's collect the review [SCORE], if it exists """
             try:
@@ -161,7 +158,7 @@ def get_reviews_data(list_page, business_id):
                     score = 'None'
             except IndexError:
                 score = 'None'
-                logger.warning(f"Can not find score. setting number to default.")
+                logger.debug(f"Can not find score. setting number to default.")
 
             """ Let's collect the review [TEXT], if it exists """
 
@@ -175,7 +172,7 @@ def get_reviews_data(list_page, business_id):
                         text = text[:250] + '...'
 
             except AttributeError:
-                logger.warning(f"Can not find text. setting number to default.")
+                logger.debug(f"Can not find text. setting number to default.")
 
             """ Let's collect the review [USER_NAME], if it exists """
             try:
@@ -187,7 +184,7 @@ def get_reviews_data(list_page, business_id):
                     user_name = 'None'
             except AttributeError:
                 user_name = 'None'
-                logger.warning(f"Can not find user_name. setting number to default.")
+                logger.debug(f"Can not find user_name. setting number to default.")
 
             """ Let's collect the review [TITLE], if it exists """
             try:
@@ -199,7 +196,7 @@ def get_reviews_data(list_page, business_id):
                     review_title = 'None'
             except AttributeError:
                 review_title = 'None'
-                logger.warning(f"Can not find review_title. setting number to default.")
+                logger.debug(f"Can not find review_title. setting number to default.")
 
             """ Let's collect the review [DATE], if it exists """
             try:
@@ -211,9 +208,7 @@ def get_reviews_data(list_page, business_id):
                     review_date = 'None'
             except AttributeError:
                 review_date = 'None'
-                logger.warning(f"Can not find review_date. setting number to default.")
-
-            # business_url = e['url']
+                logger.debug(f"Can not find review_date. setting number to default.")
 
             """ Let's collect the review [URL] """
             url = 'https://www.trustpilot.com' + \
@@ -226,7 +221,6 @@ def get_reviews_data(list_page, business_id):
             cursor.execute(f"USE {CFG['DB']['DB_Name']}")
 
             """ SELECT BUSINESS_ID """
-            # with connection.cursor() as cursor:
 
             """ INSERT USER_DETAILS """
             cursor.execute('''INSERT INTO User_details (
@@ -257,7 +251,7 @@ def get_reviews_data(list_page, business_id):
             connection.commit()
 
 
-def main():
+def review_scraper_manager():
     """ SQL CONNECTION """
     connection, cursor = connect_db()
 
@@ -270,25 +264,19 @@ def main():
                   WHERE B.name ='{BUSINESS}'"""
 
     else:
-        sql = f"""SELECT url, business_id
+        sql = f"""SELECT url, business_id, name 
                   FROM Business"""
 
     cursor.execute(sql)
     result = cursor.fetchall()
 
     """ Let's use the ClI arguments set up by the user - {CATEGORY} & {BUSINESS} """
-    # with connection.cursor() as cursor:
-    # sql = f"""SELECT B.url, B.business_id
-    #           FROM Business AS B
-    #           lEFT JOIN Category AS C
-    #           ON B.category_id = C.category_id WHERE B.name ='{BUSINESS}'"""
-    # cursor.execute(sql)
-    # result = cursor.fetchall()
 
-    logger.info(f"3")
+
 
     """ FOR every row in the SELECT query, let's collect the reviews """
     for row in result:
+        logger.info(f'Start scraping reviews for {row[2]}')
         business_url = row[0]
         business_id = row[1]
         parser = parser_initializer(business_url)
