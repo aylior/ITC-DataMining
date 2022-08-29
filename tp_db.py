@@ -14,6 +14,9 @@ def connect_db():
     Create connection to DB. Loading connection parameters from config.
     :return: conn, cursor
     """
+    print(CFG["DB"]["User"])
+    print(CFG["DB"]["Host"])
+    print(CFG["DB"]["Password"])
     try:
         conn = pymysql.connect(host=CFG["DB"]["Host"],
                                user=CFG["DB"]["User"],

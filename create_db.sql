@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS trust_pilot;
-CREATE DATABASE trust_pilot;
-USE trust_pilot;
+DROP DATABASE IF EXISTS lior_nelson;
+CREATE DATABASE lior_nelson;
+USE lior_nelson;
 
 CREATE TABLE Category (
     category_id int NOT NULL AUTO_INCREMENT,

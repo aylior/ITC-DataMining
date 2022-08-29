@@ -23,7 +23,7 @@ logger = tp_logger.get_logger()
 HOST = CFG['DB']['Host']
 USER = CFG['DB']['User']
 PASSWORD = CFG['DB']['Password']
-DB_NAME = "trust_pilot"
+DB_NAME = CFG['DB']['DB_Name']
 
 """ TEST CONSTANT ----------> (REPLACE WITH ClI DATA) """
 # CATEGORY = 'Animals & Pets'
@@ -223,7 +223,7 @@ def get_reviews_data(list_page, business_id):
             connection, cursor = connect_db()
 
             """ DATABASE SELECTION """
-            cursor.execute('USE trust_pilot')
+            cursor.execute(f"USE {CFG['DB']['DB_Name']}")
 
             """ SELECT BUSINESS_ID """
             # with connection.cursor() as cursor:
@@ -262,7 +262,7 @@ def main():
     connection, cursor = connect_db()
 
     """ DATABASE SELECTION """
-    cursor.execute(f'USE trust_pilot;')
+    cursor.execute(f'USE {CFG["DB"]["DB_Name"]};')
 
     if BUSINESS != 'All':
         sql = f"""SELECT B.url, B.business_id 
@@ -297,7 +297,7 @@ def main():
         get_reviews_data(list_page, business_id)
 
     connection, cursor = connect_db()
-    cursor.execute(f'USE trust_pilot;')
+    cursor.execute(f'USE {CFG["DB"]["DB_Name"]};')
 
     """ -------------------------> API IMPLEMENTATION <-------------------------"""
 
@@ -354,7 +354,7 @@ def main():
 
     """ SELECT SENTIMENT FROM THE DATABASE """
     connection, cursor = connect_db()
-    cursor.execute(f'USE trust_pilot;')
+    cursor.execute(f'USE {CFG["DB"]["DB_Name"]};')
 
     with connection.cursor() as cursor:
         sql = """SELECT S.review_id, positive, neutral, negative, text 

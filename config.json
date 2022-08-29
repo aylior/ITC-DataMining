@@ -6,7 +6,8 @@
     "Filters": "?numberofreviews=0&status=all&timeperiod=0&page=1",
     "Pages": 20,
     "DEFAULT_NUM_PAGES": 20,
-    "Business_Count": 40,
+    "Business": "All",
+    "Business_Count": 4000,
     "Min_Reviews_Num": 210,
     "Business_API": ""
   },
@@ -26,10 +27,10 @@
     "Batch_Size": 20
   },
   "DB": {
-    "Host": "localhost",
-    "User": "root",
+    "Host": "data-mining-db1.cttpnp4olbpx.us-west-1.rds.amazonaws.com",
+    "User": "lior_nelson",
     "Password": "",
-    "DB_Name": "trust_pilot",
+    "DB_Name": "lior_nelson",
     "Create_db_file": "create_db.sql",
     "Create_db": "N"
   }
