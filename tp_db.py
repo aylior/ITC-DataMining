@@ -68,6 +68,7 @@ def db_businesses_insert(category, business_lst):
             query = f'UPDATE Business SET category_id = {category.id}, name = "{business.name}", ' \
                     f'url = "{business.url}", score = {business.score}, ' \
                     f'reviews = {business.reviews} WHERE name = "{business.name}";'
+            continue
         else:
             query = f'INSERT INTO Business (category_id, name, url, score, reviews) VALUES ({category.id}, ' \
                 f'"{business.name}", "{business.url}", {business.score}, {business.reviews});'

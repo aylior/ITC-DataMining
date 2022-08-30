@@ -65,7 +65,7 @@ def get_list_of_pages(website, page_nb):
     page_parameter = '?page='
     list_page = []
 
-    page_nb = 2
+    page_nb = 6
 
     try:
         for i in range(1, page_nb + 1):
@@ -132,6 +132,8 @@ def get_reviews_data(list_page, business_id):
         widgets = get_page_content(parser)
 
         """ a. For every review bloc (article) inside the page content """
+        if widgets is None:
+            continue
 
         art = widgets.find_all('article')
         if art is None:
@@ -168,8 +170,8 @@ def get_reviews_data(list_page, business_id):
                 text = article.section.find('div', {'styles_reviewContent__0Q2Tg'}).p.text
 
                 if text is not None:
-                    if len(text) > 250:
-                        text = text[:250] + '...'
+                    if len(text) > 2000:
+                        text = text[:2000] + '...'
 
             except AttributeError:
                 logger.debug(f"Can not find text. setting number to default.")
@@ -283,12 +285,12 @@ def review_scraper_manager():
         page_nb = get_nb_page_review(parser)
         list_page = get_list_of_pages(business_url, page_nb)
         get_reviews_data(list_page, business_id)
-
+    print(CFG["Site"]["Business_API"])
     connection, cursor = connect_db()
     cursor.execute(f'USE {CFG["DB"]["DB_Name"]};')
 
     """ -------------------------> API IMPLEMENTATION <-------------------------"""
-
+    logger.info(f'Getting sentiments')
     """ SELECT TEXT FROM [Review_text] TABLE """
     with connection.cursor() as cursor:
         sql = f"""SELECT R.review_id, T.text, name

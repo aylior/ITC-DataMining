@@ -4,12 +4,12 @@
     "Categories_Page": "/categories/",
     "Category": "All",
     "Filters": "?numberofreviews=0&status=all&timeperiod=0&page=1",
-    "Pages": 20,
+    "Pages": 50,
     "DEFAULT_NUM_PAGES": 20,
     "Business": "All",
-    "Business_Count": 4000,
+    "Business_Count": 50000,
     "Min_Reviews_Num": 210,
-    "Business_API": ""
+    "Business_API": "Boomerang Pet ID Tags"
   },
   "Log": {
     "Log_File": "trustpilot.log",
